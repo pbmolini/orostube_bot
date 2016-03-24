@@ -42,7 +42,7 @@ class MessageResponder
 
   def answer_with_pizza_list message
     pizzas = Nokogiri::HTML(open('http://www.orostube.it/products-list/4', 'User-Agent' => 'ruby')).css(".elenco-item")
-    @pizza_names = pizzas.map {|p| p.css("p").first.text.gsub(/\s+$/, "")}
+    @pizza_names = pizzas.map {|p| "\u{1f355} " + p.css("p").first.text.gsub(/\s+$/, "")}
     pizza_ingredients = pizzas.map {|p| p.css("p").last.text.gsub(/[\t\n]/, "").gsub(/\s+$/, "")}
     MessageSender.new(bot: bot,
                       chat: message.chat, text: "Pizze scaricate! Scegli la tua pizza e aspetta che qualcuno te la vada a prendere",
