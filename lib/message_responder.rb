@@ -23,7 +23,7 @@ class MessageResponder
 
     case @user.state
     when 'choosing_pizza'
-      choose_pizza_and_notify_pietro message.text.gsub(/([Pp]izza |\u\{1f355\} )/, "")
+      choose_pizza_and_notify_pietro message.text.gsub(/[Pp]izza /, "")
       @user.update_attributes state: nil
     else
       if message.text == "/pizze"
