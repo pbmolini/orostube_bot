@@ -1,7 +1,8 @@
 require 'rubygems'
 require 'bundler/setup'
 
-require 'pg'
+# require 'pg'
+require 'sqlite3'
 require 'active_record'
 require 'yaml'
 
