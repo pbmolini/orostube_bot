@@ -2,3 +2,4 @@ database.yml
 secrets.yml
 *.log
 .env
+db/orostube_bot
