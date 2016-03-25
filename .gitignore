@@ -5,4 +5,3 @@ secrets.yml.erb
 *.log
 .env
 db/orostube_bot
-Procfile
