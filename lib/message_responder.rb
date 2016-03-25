@@ -42,7 +42,15 @@ class MessageResponder
       end
 
       on /\/pizza (.+)/ do |pizza|
-        choose_meal_and_notify_pietro pizza.gsub(/[Pp]izza /, "")
+        choose_meal_and_notify_pietro "\u{1f355} #{pizza.gsub(/[Pp]izza /, "")}"
+      end
+
+      on /\/pasta (.+)/ do |pasta|
+        choose_meal_and_notify_pietro "\u{1f372} #{pasta}"
+      end
+
+      on /\/insalata (.+)/ do |salad|
+        choose_meal_and_notify_pietro "\u{1f331} #{salad.gsub(/[Ii]nsalata /, "")}"
       end
     end
 
