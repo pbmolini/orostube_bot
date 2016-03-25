@@ -9,7 +9,7 @@ class AppConfigurator
   end
 
   def get_token
-    YAML::load(IO.read('config/secrets.yml'))['telegram_bot_token']
+    ENV['TELEGRAM_BOT_TOKEN']
   end
 
   def get_logger
