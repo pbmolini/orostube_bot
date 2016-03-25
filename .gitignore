@@ -3,3 +3,4 @@ secrets.yml
 *.log
 .env
 db/orostube_bot
+Procfile
