@@ -75,7 +75,6 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (~> 4.2, >= 4.2.5)
-  i18n (~> 0.7.0)
   nokogiri
   pry
   sqlite3
