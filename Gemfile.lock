@@ -80,6 +80,3 @@ DEPENDENCIES
   pry
   sqlite3
   telegram-bot-ruby (~> 0.4.1)
-
-BUNDLED WITH
-   1.11.2

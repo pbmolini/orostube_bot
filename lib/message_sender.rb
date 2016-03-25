@@ -8,6 +8,7 @@ class MessageSender
   attr_reader :answers
   attr_reader :reply_to_message
   attr_reader :logger
+  attr_reader :hide_kb
 
   def initialize(options)
     @bot = options[:bot]
@@ -16,6 +17,7 @@ class MessageSender
     @answers = options[:answers]
     @reply_to_message_id = options[:reply_to_message_id]
     @logger = AppConfigurator.new.get_logger
+    @hide_kb = options[:hide_kb]
   end
 
   def send
@@ -32,9 +34,12 @@ class MessageSender
   private
 
   def reply_markup
-    if answers
+    if answers.present?
       ReplyMarkupFormatter.new(answers).get_markup
     end
+    # if hide_kb
+    #   ReplyMarkupFormatter.new(nil).get_hide_keyboard
+    # end
   end
 
 end

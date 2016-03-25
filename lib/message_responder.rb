@@ -27,18 +27,18 @@ class MessageResponder
       @user.update_attributes state: nil
     else
       on /\/pizze/ do
-        answer_with_pizza_list(message)
         @user.update_attributes state: 'choosing_meal'
+        answer_with_pizza_list(message)
       end
 
       on /\/paste/ do
-        answer_with_pasta_list(message)
         @user.update_attributes state: 'choosing_meal'
+        answer_with_pasta_list(message)
       end
 
       on /\/insalate/ do
-        answer_with_salad_list(message)
         @user.update_attributes state: 'choosing_meal'
+        answer_with_salad_list(message)
       end
 
       on /\/pizza (.+)/ do |pizza|
@@ -68,33 +68,50 @@ class MessageResponder
     pizzas = Nokogiri::HTML(open('http://www.orostube.it/products-list/4', 'User-Agent' => 'ruby')).css(".elenco-item")
     pizza_names = pizzas.map {|p| "\u{1f355} " + p.css("p").first.text.gsub(/\s+$/, "")}
     pizza_ingredients = pizzas.map {|p| p.css("p").last.text.gsub(/[\t\n]/, "").gsub(/\s+$/, "")}
-    display_keyboard_for pizza_names
+    pizza_names.any? ? display_keyboard_for(pizza_names) : answer_with_orostube_closed
   end
 
   def answer_with_pasta_list message
     pastas = Nokogiri::HTML(open('http://www.orostube.it/products-list/5', 'User-Agent' => 'ruby')).css(".elenco-item")
     pasta_names = pastas.map {|p| "\u{1f372} " + p.css("p").first.text.gsub(/\s+$/, "")}
     pasta_ingredients = pastas.map {|p| p.css("p").last.text.gsub(/[\t\n]/, "").gsub(/\s+$/, "")}
-    display_keyboard_for pasta_names
+    pasta_names.any? ? display_keyboard_for(pasta_names) : answer_with_orostube_closed
   end
 
   def answer_with_salad_list message
     salads = Nokogiri::HTML(open('http://www.orostube.it/products-list/12', 'User-Agent' => 'ruby')).css(".elenco-item")
     salad_names = salads.map {|p| "\u{1f331} " + p.css("p").first.text.gsub(/\s+$/, "")}
     salad_ingredients = salads.map {|p| p.css("p").last.text.gsub(/[\t\n]/, "").gsub(/\s+$/, "")}
-    display_keyboard_for salad_names
+    salad_names.any? ? display_keyboard_for(salad_names) : answer_with_orostube_closed
   end
 
   #TODO: un/una dependin on meal type
   def choose_meal_and_notify_pietro(meal)
-    MessageSender.new(bot: bot, chat: message.chat, text: "Figo! Farò sapere a Pietro che vuoi una #{meal}").send
-    MessageSender.new(bot: bot, chat: Telegram::Bot::Types::Chat.new(id: @pietro.chat_id), text: "#{message.chat.first_name} vuole #{meal}").send
+    MessageSender.new(bot: bot,
+                      chat: message.chat,
+                      text: "Figo! Farò sapere a Pietro che vuoi una #{meal}",
+                      # hide_kb: true
+                      ).send
+    MessageSender.new(bot: bot,
+                      chat: Telegram::Bot::Types::Chat.new(id: @pietro.chat_id),
+                      text: "#{message.chat.first_name} vuole #{meal}",
+                      # hide_kb: true
+                      ).send
   end
 
   def display_keyboard_for food_list
     MessageSender.new(bot: bot,
-                      chat: message.chat, text: "Ottima idea! Adesso scegli cosa vuoi mangiare e aspetta che qualcuno te lo vada a prendere",
+                      chat: message.chat,
+                      text: "Ottima idea! Adesso scegli cosa vuoi mangiare e aspetta che qualcuno te lo vada a prendere",
                       answers: food_list
+                      ).send
+  end
+
+  def answer_with_orostube_closed
+    @user.update_attributes state: nil
+    MessageSender.new(bot: bot,
+                      chat: message.chat,
+                      text: "Oh no! Sembra che l'OroStube sia chiuso oggi!"
                       ).send
   end
 end
