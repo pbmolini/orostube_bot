@@ -23,30 +23,46 @@ class MessageResponder
 
     case @user.state
     when 'choosing_meal'
-      choose_meal_and_notify_pietro message.text.gsub(/[Pp]izza /, "")
+      choose_meal_and_notify_pietro message.text
       @user.update_attributes state: nil
     else
-      if message.text == "/pizze"
+      on /\/pizze/ do
         answer_with_pizza_list(message)
         @user.update_attributes state: 'choosing_meal'
       end
-      if message.text == "/paste"
+
+      on /\/paste/ do
         answer_with_pasta_list(message)
         @user.update_attributes state: 'choosing_meal'
       end
-      if message.text == "/insalate"
+
+      on /\/insalate/ do
         answer_with_salad_list(message)
         @user.update_attributes state: 'choosing_meal'
       end
-      match = /\/pizza (.+)/.match(message.text)
-      if match.present?
-        choose_meal_and_notify_pietro match.to_a[1].gsub(/[Pp]izza /, "")
+
+      on /\/pizza (.+)/ do |pizza|
+        choose_meal_and_notify_pietro pizza.gsub(/[Pp]izza /, "")
       end
     end
 
   end
 
   private
+
+  def on regex, &block
+    regex =~ message.text
+
+    if $~
+      case block.arity
+      when 0
+        yield
+      when 1
+        yield $1
+      end
+    end
+
+  end
 
   def answer_with_pizza_list message
     pizzas = Nokogiri::HTML(open('http://www.orostube.it/products-list/4', 'User-Agent' => 'ruby')).css(".elenco-item")
@@ -69,9 +85,10 @@ class MessageResponder
     display_keyboard_for salad_names
   end
 
+  #TODO: un/una dependin on meal type
   def choose_meal_and_notify_pietro(meal)
     MessageSender.new(bot: bot, chat: message.chat, text: "Figo! Farò sapere a Pietro che vuoi una #{meal}").send
-    MessageSender.new(bot: bot, chat: Telegram::Bot::Types::Chat.new(id: @pietro.chat_id), text: "#{message.chat.first_name} vuole una #{meal}").send
+    MessageSender.new(bot: bot, chat: Telegram::Bot::Types::Chat.new(id: @pietro.chat_id), text: "#{message.chat.first_name} vuole #{meal}").send
   end
 
   def display_keyboard_for food_list
