@@ -1,3 +1,11 @@
-The OpenShift `ruby` cartridge documentation can be found at:
+# Get Pizzas!
 
-http://openshift.github.io/documentation/oo_cartridge_guide.html#ruby
+### Credits
+
+This bot is largely inspired by the [Ruby Telegram Bot boilerplate](https://github.com/MaximAbramchuck/ruby-telegram-bot-boilerplate)
+
+### TODO
+
+* Calculate price per person for an order
+* Start a new order and send link to others
+* Make money and __fatturare__
