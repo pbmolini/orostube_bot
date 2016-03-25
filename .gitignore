@@ -1,5 +1,7 @@
 database.yml
+database.yml.erb
 secrets.yml
+secrets.yml.erb
 *.log
 .env
 db/orostube_bot

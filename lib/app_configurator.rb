@@ -10,6 +10,9 @@ class AppConfigurator
 
   def get_token
     ENV['TELEGRAM_BOT_TOKEN']
+    # template = ERB.new File.new('config/secrets.yml.erb').read
+    # YAML.load template.result(binding)['telegram_bot_token']
+    # YAML::load(IO.read('config/secrets.yml'))['telegram_bot_token']
   end
 
   def get_logger
