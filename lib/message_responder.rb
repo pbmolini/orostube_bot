@@ -26,31 +26,36 @@ class MessageResponder
       choose_meal_and_notify_pietro message.text
       @user.update_attributes state: nil
     else
-      on /\/pizze/ do
+      on /^\/pizze/ do
         @user.update_attributes state: 'choosing_meal'
         answer_with_pizza_list(message)
       end
 
-      on /\/paste/ do
+      on /^\/cucina\s*$/ do
         @user.update_attributes state: 'choosing_meal'
-        answer_with_pasta_list(message)
+        answer_with_cucina_list(message)
       end
 
-      on /\/insalate/ do
+      on /^\/insalate/ do
         @user.update_attributes state: 'choosing_meal'
         answer_with_salad_list(message)
       end
 
-      on /\/pizza (.+)/ do |pizza|
+      # For th Pros
+      on /^\/pizza (.+)/ do |pizza|
         choose_meal_and_notify_pietro "\u{1f355} #{pizza.gsub(/[Pp]izza /, "")}"
       end
 
-      on /\/pasta (.+)/ do |pasta|
-        choose_meal_and_notify_pietro "\u{1f372} #{pasta}"
+      on /^\/cucina (.+)/ do |cucina|
+        choose_meal_and_notify_pietro "\u{1f372} #{cucina}"
       end
 
-      on /\/insalata (.+)/ do |salad|
+      on /^\/insalata (.+)/ do |salad|
         choose_meal_and_notify_pietro "\u{1f331} #{salad.gsub(/[Ii]nsalata /, "")}"
+      end
+
+      on /^\/help/ do
+        display_help
       end
     end
 
@@ -79,11 +84,11 @@ class MessageResponder
     pizza_names.any? ? display_keyboard_for(pizza_names) : answer_with_orostube_closed
   end
 
-  def answer_with_pasta_list message
-    pastas = Nokogiri::HTML(open('http://www.orostube.it/products-list/5', 'User-Agent' => 'ruby')).css(".elenco-item")
-    pasta_names = pastas.map {|p| "\u{1f372} " + p.css("p").first.text.gsub(/\s+$/, "")}
-    pasta_ingredients = pastas.map {|p| p.css("p").last.text.gsub(/[\t\n]/, "").gsub(/\s+$/, "")}
-    pasta_names.any? ? display_keyboard_for(pasta_names) : answer_with_orostube_closed
+  def answer_with_cucina_list message
+    cucinas = Nokogiri::HTML(open('http://www.orostube.it/products-list/5', 'User-Agent' => 'ruby')).css(".elenco-item")
+    cucina_names = cucinas.map {|p| "\u{1f372} " + p.css("p").first.text.gsub(/\s+$/, "")}
+    cucina_ingredients = cucinas.map {|p| p.css("p").last.text.gsub(/[\t\n]/, "").gsub(/\s+$/, "")}
+    cucina_names.any? ? display_keyboard_for(cucina_names) : answer_with_orostube_closed
   end
 
   def answer_with_salad_list message
@@ -97,7 +102,7 @@ class MessageResponder
   def choose_meal_and_notify_pietro(meal)
     MessageSender.new(bot: bot,
                       chat: message.chat,
-                      text: "Figo! Farò sapere a Pietro che vuoi una #{meal}",
+                      text: "Figo! Farò sapere a Pietro che vuoi #{meal}",
                       # hide_kb: true
                       ).send
     MessageSender.new(bot: bot,
@@ -120,6 +125,20 @@ class MessageResponder
     MessageSender.new(bot: bot,
                       chat: message.chat,
                       text: "Oh no! Sembra che l'OroStube sia chiuso oggi!"
+                      ).send
+  end
+
+  def display_help
+    MessageSender.new(bot: bot,
+                      chat: message.chat,
+                      text: %{
+                        Per vedere cosa c'è oggi:
+                        ----
+                        /pizze per le pizze
+                        /insalate per le insalate
+                        /cucina per la cucina
+                        ----
+                      }.gsub(/^[\s]+/, "")
                       ).send
   end
 end
