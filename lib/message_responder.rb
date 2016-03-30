@@ -23,12 +23,25 @@ class MessageResponder
   def respond
 
     case @user.state
-    when 'choosing_meal'
-      choose_meal_and_notify_pietro message.text
-      @user.update_attributes state: nil
+    when /choosing_[#{MenuItem::CATEGORIES.join('|')}]/
+      on /Indietro/ do
+        answer_with_menu @user.state.gsub('choosing_','')
+      end
+
+      on /Ordina (.+)/ do |name|
+        choose_meal_and_notify_pietro name
+        @user.update_attributes state: nil
+      end
+
+      on /^(?!.*(Indietro|Ordina)).*$/ do
+        answer_with_details
+      end
+
+      # choose_meal_and_notify_pietro message.text
+      # @user.update_attributes state: nil
     else
-      on /^\/(pizze|cucina\s*$|insalate)/ do |category|
-        @user.update_attributes state: 'choosing_meal'
+      on /^\/(pizze|cucina|insalate)\s*$/ do |category|
+        @user.update_attributes state: "choosing_#{category.to_s}"
         answer_with_menu category.to_sym
       end
 
@@ -70,8 +83,29 @@ class MessageResponder
 
   def answer_with_menu category
     items = MenuBuilder.retrieve(category)
-    names = items.map { |i| "#{MenuBuilder.emoji_for category} #{i.name}" }
+    names = items.map(&:name)
     names.any? ? display_keyboard_for(names) : answer_with_orostube_closed
+  end
+
+  def answer_with_details
+    item = MenuItem.find_by(name: message.text)
+    if item.present?
+      MessageSender.new(bot: bot,
+                        chat: message.chat,
+                        text: %{
+                          *#{message.text}*
+                          *Ingredienti:* #{item.ingredients}
+                          *Prezzo:* #{item.price}0 €
+                        }.gsub(/^[\s]+/, ""),
+                        parse_mode: 'Markdown',
+                        answers: ['Indietro', "Ordina #{item.name}"]
+                        ).send
+    else
+      MessageSender.new(bot: bot,
+                        chat: message.chat,
+                        text: "Non so cosa sia #{message.text}"
+                        ).send
+    end
   end
 
   #TODO: un/una dependin on meal type
@@ -108,13 +142,14 @@ class MessageResponder
     MessageSender.new(bot: bot,
                       chat: message.chat,
                       text: %{
-                        Per vedere cosa c'è oggi:
+                        *Per vedere cosa c'è oggi:*
                         ----
                         /pizze per le pizze
                         /insalate per le insalate
                         /cucina per la cucina
                         ----
-                      }.gsub(/^[\s]+/, "")
+                      }.gsub(/^[\s]+/, ""),
+                      parse_mode: 'Markdown'
                       ).send
   end
 end

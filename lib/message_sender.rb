@@ -7,6 +7,7 @@ class MessageSender
   attr_reader :chat
   attr_reader :answers
   attr_reader :reply_to_message
+  attr_reader :parse_mode
   attr_reader :logger
   attr_reader :hide_kb
 
@@ -16,6 +17,7 @@ class MessageSender
     @chat = options[:chat]
     @answers = options[:answers]
     @reply_to_message_id = options[:reply_to_message_id]
+    @parse_mode = options[:parse_mode]
     @logger = AppConfigurator.new.get_logger
     @hide_kb = options[:hide_kb]
   end
@@ -24,6 +26,7 @@ class MessageSender
     params = { chat_id: chat.id, text: text }
     params[:reply_markup] = reply_markup if reply_markup
     params[:reply_to_message_id] = @reply_to_message_id if @reply_to_message_id
+    params[:parse_mode] = @parse_mode if @parse_mode
 
     resp = bot.api.send_message(params)
 
