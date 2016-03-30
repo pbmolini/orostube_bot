@@ -1,8 +1,10 @@
 require './models/user'
+require './models/order'
 require './lib/message_sender'
 require './lib/menu_builder'
-require 'nokogiri'
-require 'open-uri'
+# require 'nokogiri'
+# require 'open-uri'
+require 'date'
 require 'pry'
 
 class MessageResponder
@@ -52,6 +54,21 @@ class MessageResponder
 
       on /^\/help/ do
         display_help
+      end
+
+      on /^\/ordini/ do
+        answer_with_orders
+      end
+
+      # on /^\/ordinato/ do
+      #   ask_for_discounts
+      # end
+
+      # binding.pry
+      if message.reply_to_message.present? and message.reply_to_message.text.match(/^\/ordinato/)
+        on /^(\d+)$/ do |n_discounts|
+          send_price_per_person n_discounts.to_i
+        end
       end
 
     end
@@ -129,6 +146,37 @@ class MessageResponder
                       text: "#{message.chat.first_name} vuole #{meal}",
                       # hide_kb: true
                       ).send
+    Order.create(user: @user, user_name: message.chat.first_name, item: meal, price: MenuItem.find_by(name: meal).price)
+  end
+
+  def answer_with_orders
+    orders = Order.where 'created_at > ?', Date.today.to_time
+
+    MessageSender.new(bot: bot,
+                      chat: message.chat,
+                      text: orders_summary(orders),
+                      parse_mode: 'Markdown'
+                      ).send
+  end
+
+  def ask_for_discounts
+    MessageSender.new(bot: bot,
+                      chat: message.chat,
+                      text: "Quante tessere vuoi usare?",
+                      force_reply: true
+                      ).send
+  end
+
+  def send_price_per_person n_discounts
+    orders = Order.where 'created_at > ?', Date.today.to_time
+    total = orders.map(&:price).reduce(:+) - (6.0 * n_discounts)
+
+    orders.each do |o|
+      MessageSender.new(bot: bot,
+                        chat: o.user.id,
+                        text: "Pietro ha ordinato! Gli devi #{total/orders.count}"
+                        ).send
+    end
   end
 
   def display_keyboard_for food_list
@@ -152,8 +200,20 @@ class MessageResponder
                       chat: message.chat,
                       text: %{
                         Usa il comando /start per iniziare (come ai vecchi tempi)
-                      }.gsub(/^[\s]+/, ""),
-                      parse_mode: 'Markdown'
+                      }.gsub(/^[\s]+/, "")
                       ).send
+  end
+
+  def orders_summary orders
+    if orders.any?
+      total = orders.map(&:price).reduce(:+)
+      %{
+        #{orders.map.with_index {|o, i| "#{i+1}. *#{o.user_name}* vuole #{o.item}"}.join("\n")}
+        -----
+        *Totale:* #{total} €
+      }.gsub(/^[\s]+/, "")
+    else
+      "Non ci sono ordini"
+    end
   end
 end

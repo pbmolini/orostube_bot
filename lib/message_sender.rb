@@ -17,6 +17,7 @@ class MessageSender
     @chat = options[:chat]
     @answers = options[:answers]
     @reply_to_message_id = options[:reply_to_message_id]
+    @force_reply = options[:force_reply]
     @parse_mode = options[:parse_mode]
     @logger = AppConfigurator.new.get_logger
     @hide_kb = options[:hide_kb]
@@ -26,6 +27,7 @@ class MessageSender
     params = { chat_id: chat.id, text: text }
     params[:reply_markup] = reply_markup if reply_markup
     params[:reply_to_message_id] = @reply_to_message_id if @reply_to_message_id
+    params[:reply_markup] = force_reply_markup if @force_reply
     params[:parse_mode] = @parse_mode if @parse_mode
 
     resp = bot.api.send_message(params)
@@ -43,6 +45,10 @@ class MessageSender
     # if hide_kb
     #   ReplyMarkupFormatter.new(nil).get_hide_keyboard
     # end
+  end
+
+  def force_reply_markup
+    Telegram::Bot::Types::ForceReply.new(force_reply: true)
   end
 
 end
