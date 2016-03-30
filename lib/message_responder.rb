@@ -1,5 +1,6 @@
 require './models/user'
 require './lib/message_sender'
+require './lib/menu_builder'
 require 'nokogiri'
 require 'open-uri'
 require 'pry'
@@ -26,19 +27,9 @@ class MessageResponder
       choose_meal_and_notify_pietro message.text
       @user.update_attributes state: nil
     else
-      on /^\/pizze/ do
+      on /^\/(pizze|cucina\s*$|insalate)/ do |category|
         @user.update_attributes state: 'choosing_meal'
-        answer_with_pizza_list(message)
-      end
-
-      on /^\/cucina\s*$/ do
-        @user.update_attributes state: 'choosing_meal'
-        answer_with_cucina_list(message)
-      end
-
-      on /^\/insalate/ do
-        @user.update_attributes state: 'choosing_meal'
-        answer_with_salad_list(message)
+        answer_with_menu category.to_sym
       end
 
       # For th Pros
@@ -77,25 +68,10 @@ class MessageResponder
 
   end
 
-  def answer_with_pizza_list message
-    pizzas = Nokogiri::HTML(open('http://www.orostube.it/products-list/4', 'User-Agent' => 'ruby')).css(".elenco-item")
-    pizza_names = pizzas.map {|p| "\u{1f355} " + p.css("p").first.text.gsub(/\s+$/, "")}
-    pizza_ingredients = pizzas.map {|p| p.css("p").last.text.gsub(/[\t\n]/, "").gsub(/\s+$/, "")}
-    pizza_names.any? ? display_keyboard_for(pizza_names) : answer_with_orostube_closed
-  end
-
-  def answer_with_cucina_list message
-    cucinas = Nokogiri::HTML(open('http://www.orostube.it/products-list/5', 'User-Agent' => 'ruby')).css(".elenco-item")
-    cucina_names = cucinas.map {|p| "\u{1f372} " + p.css("p").first.text.gsub(/\s+$/, "")}
-    cucina_ingredients = cucinas.map {|p| p.css("p").last.text.gsub(/[\t\n]/, "").gsub(/\s+$/, "")}
-    cucina_names.any? ? display_keyboard_for(cucina_names) : answer_with_orostube_closed
-  end
-
-  def answer_with_salad_list message
-    salads = Nokogiri::HTML(open('http://www.orostube.it/products-list/12', 'User-Agent' => 'ruby')).css(".elenco-item")
-    salad_names = salads.map {|p| "\u{1f331} " + p.css("p").first.text.gsub(/\s+$/, "")}
-    salad_ingredients = salads.map {|p| p.css("p").last.text.gsub(/[\t\n]/, "").gsub(/\s+$/, "")}
-    salad_names.any? ? display_keyboard_for(salad_names) : answer_with_orostube_closed
+  def answer_with_menu category
+    items = MenuBuilder.retrieve(category)
+    names = items.map { |i| "#{MenuBuilder.emoji_for category} #{i.name}" }
+    names.any? ? display_keyboard_for(names) : answer_with_orostube_closed
   end
 
   #TODO: un/una dependin on meal type
