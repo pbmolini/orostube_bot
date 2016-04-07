@@ -8,7 +8,7 @@ class MenuBuilder
     items = MenuItem.send(category.to_sym)
     last_update = items.map(&:retrieved_at).max if items.any?
 
-    if items.empty? or ((last_update - Date.today).to_i >= 60)
+    if items.empty? or ((Date.today - last_update).to_i >= 1)
       rebuild_db category
     else
       items
