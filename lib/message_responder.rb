@@ -24,6 +24,11 @@ class MessageResponder
 
   def respond
 
+    on /^\/reset/ do
+      @user.update_attributes state: nil
+      answer_with_reset_message
+    end
+
     case @user.state
     when 'ordering'
       on /(Pizze|Insalate|Cucina)/ do |category|
@@ -192,6 +197,13 @@ class MessageResponder
     MessageSender.new(bot: bot,
                       chat: message.chat,
                       text: "Oh no! Sembra che l'OroStube sia chiuso oggi!"
+                      ).send
+  end
+
+  def answer_with_reset_message
+    MessageSender.new(bot: bot,
+                      chat: message.chat,
+                      text: "Ok, ora puoi ricominciare!"
                       ).send
   end
 
