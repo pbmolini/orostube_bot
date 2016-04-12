@@ -52,6 +52,11 @@ class MessageResponder
       on /^(?!.*(Indietro|Ordina|Menu)).*$/ do
          answer_with_details
       end
+    when 'deleting'
+      on /^Elimina (.+)/ do |name|
+        remove_meal_from_order name
+        @user.update_attributes state: nil
+      end
     else
       on /^\/start/ do
         go_to_start_menu
@@ -65,16 +70,20 @@ class MessageResponder
         answer_with_orders
       end
 
+      on /^\/cancella/ do
+        go_to_delete_menu
+      end
+
       # on /^\/ordinato/ do
       #   ask_for_discounts
       # end
 
       # binding.pry
-      if message.reply_to_message.present? and message.reply_to_message.text.match(/^\/ordinato/)
-        on /^(\d+)$/ do |n_discounts|
-          send_price_per_person n_discounts.to_i
-        end
-      end
+      # if message.reply_to_message.present? and message.reply_to_message.text.match(/^\/ordinato/)
+      #   on /^(\d+)$/ do |n_discounts|
+      #     send_price_per_person n_discounts.to_i
+      #   end
+      # end
 
     end
 
@@ -164,31 +173,55 @@ class MessageResponder
                       ).send
   end
 
-  def ask_for_discounts
-    MessageSender.new(bot: bot,
-                      chat: message.chat,
-                      text: "Quante tessere vuoi usare?",
-                      force_reply: true
-                      ).send
-  end
+  # def ask_for_discounts
+  #   MessageSender.new(bot: bot,
+  #                     chat: message.chat,
+  #                     text: "Quante tessere vuoi usare?",
+  #                     force_reply: true
+  #                     ).send
+  # end
 
-  def send_price_per_person n_discounts
-    orders = Order.where 'created_at > ?', Date.today.to_time
-    total = orders.map(&:price).reduce(:+) - (6.0 * n_discounts)
-
-    orders.each do |o|
-      MessageSender.new(bot: bot,
-                        chat: o.user.id,
-                        text: "Pietro ha ordinato! Gli devi #{total/orders.count}"
-                        ).send
-    end
-  end
+  # def send_price_per_person n_discounts
+  #   orders = Order.where 'created_at > ?', Date.today.to_time
+  #   total = orders.map(&:price).reduce(:+) - (6.0 * n_discounts)
+  #
+  #   orders.each do |o|
+  #     MessageSender.new(bot: bot,
+  #                       chat: o.user.id,
+  #                       text: "Pietro ha ordinato! Gli devi #{total/orders.count}"
+  #                       ).send
+  #   end
+  # end
 
   def display_keyboard_for food_list
     MessageSender.new(bot: bot,
                       chat: message.chat,
                       text: "Ottima idea! Adesso scegli cosa vuoi mangiare e aspetta che qualcuno te lo vada a prendere",
                       answers: food_list
+                      ).send
+  end
+
+  def go_to_delete_menu
+    answer_with_delete_menu
+    @user.update_attributes state: 'deleting'
+  end
+
+  def answer_with_delete_menu
+    todays_order = Order.where('user_id = ? AND created_at > ?', @user.id, Date.today)
+    MessageSender.new(bot: bot,
+                      chat: message.chat,
+                      text: "Scegli quali elementi eliminare",
+                      answers: todays_order.map {|o| "Elimina #{o.item}"} + ["Annulla"]
+                      ).send
+  end
+
+  def remove_meal_from_order name
+    order = Order.find_by('user_id = ? AND created_at > ? AND item = ?', @user.id, Date.today, name)
+    order.destroy
+
+    MessageSender.new(bot: bot,
+                      chat: message.chat,
+                      text: "Ok. Hai eliminato #{name} dal tuo ordine"
                       ).send
   end
 
