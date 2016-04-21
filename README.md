@@ -1,6 +1,17 @@
 # Get Pizzas!
 
-### Usage
+### Commands list
+
+This is the command list to provide to BotFather. Update this to add public commands
+
+```
+start - Inizia ad ordinare
+reset - Interrompi l'ordine
+cancella - Cancella un tuo ordine
+help - Messaggio di aiuto di grande efficacia
+```
+
+### Development
 
 Create a `.env` file in the root and fill it like this
 
