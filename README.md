@@ -16,6 +16,26 @@ Then use [Foreman](https://github.com/ddollar/foreman) to launch it.
 foreman start
 ```
 
+### Deployment
+
+Currently the bot is deployed on `dev`.
+
+Deploy:
+```
+$ scp -r * ict4g@dev.ict4g.org:/home/ict4g/orostube-bot
+```
+
+then on `dev` restart the process
+
+```
+$ cd orostube-bot
+$ screen -r
+Ctrl+C
+$ screen -S orostube-bot foreman start
+```
+
+Done!
+
 ### TODO
 
 * Calculate price per person for an order
