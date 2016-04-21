@@ -21,6 +21,7 @@ foreman start
 Currently the bot is deployed on `dev`.
 
 Deploy:
+
 ```
 $ scp -r * ict4g@dev.ict4g.org:/home/ict4g/orostube-bot
 ```
